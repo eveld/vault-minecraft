@@ -8,19 +8,20 @@ variable "vault_bootstrap_script" {
   vault status
 
   vault secrets enable kv-v2
-  vault kv put secret/minecraft/level-1 access=true
-  vault kv put secret/minecraft/level-2 access=true
-  vault kv put secret/minecraft/level-3 access=true
-  vault kv put secret/minecraft/level-4 access=true
-  vault kv put secret/minecraft/incident-response access=true
+  vault kv put secret/minecraft/404 access=true
+  vault kv put secret/minecraft/418 access=true
+  vault kv put secret/minecraft/vip access=true
 
   vault auth enable userpass
 
-  vault policy write level-1 /data/policies/level-1.hcl
-  vault policy write level-2 /data/policies/level-2.hcl
-  vault policy write level-3 /data/policies/level-3.hcl
-  vault policy write level-4 /data/policies/level-4.hcl
-  vault policy write incident-response /data/policies/incident-response.hcl
+  vault policy write 404 /data/policies/room-404.hcl
+  vault policy write 418 /data/policies/room-418.hcl
+  vault policy write vip /data/policies/vip.hcl
+
+  vault secrets enable transit
+  vault write -f transit/keys/minecraft type=rsa-4096
+
+  vault policy write minecraft /data/policies/transit.hcl
   EOF
 }
 
