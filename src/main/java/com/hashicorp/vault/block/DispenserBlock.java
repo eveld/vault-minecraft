@@ -13,7 +13,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager.Builder;
@@ -88,7 +87,7 @@ public class DispenserBlock extends StatefulBlock {
         // Create the vault user pass for the player.
         boolean created = dispenser.createUserPass(username, uuid, dispenser.getPolicy());
         if (!created) {
-          player.sendMessage(Text.literal("ERROR - Could create user pass"), true);
+          player.sendMessage(Text.literal("ERROR - Could not create user pass"), true);
           return ActionResult.SUCCESS;
         }
 
@@ -100,14 +99,18 @@ public class DispenserBlock extends StatefulBlock {
         }
 
         // Encrypt the uuid of the player.
+        String encrypted = dispenser.encrypt(uuid);
 
         // Sign the encrypted uuid.
+        String signature = dispenser.sign(encrypted);
 
         // Create an Nbt containing the login details and write it to the card.
         NbtCompound identity = card.getOrCreateNbt();
         identity.putString("name", login.auth.metadata.username);
         identity.putString("token", login.auth.token);
         identity.putString("policies", String.join(", ", login.auth.policies));
+        identity.putString("encrypted", encrypted);
+        identity.putString("signature", signature);
         card.setNbt(identity);
 
         // Dispense a card with the login details.

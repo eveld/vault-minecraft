@@ -26,7 +26,7 @@ public class ModClient implements ClientModInitializer {
                 BlockEntityRendererRegistry.register(BlockEntities.DISPENSER_ENTITY,
                                 DispenserRenderer::new);
                 BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DISPENSER_BLOCK,
-                                RenderLayer.getTranslucent());
+                                RenderLayer.getCutoutMipped());
 
                 LockClicked.EVENT.register((block, callback) -> {
                         LockGui gui = new LockGui(block, callback);

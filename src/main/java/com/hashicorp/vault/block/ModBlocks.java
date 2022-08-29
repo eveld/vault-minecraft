@@ -14,7 +14,7 @@ import net.minecraft.util.registry.Registry;
 
 public class ModBlocks {
   public static final Block DISPENSER_BLOCK = registerBlock("dispenser",
-      new DispenserBlock(FabricBlockSettings.of(Material.GLASS).nonOpaque()),
+      new DispenserBlock(FabricBlockSettings.of(Material.METAL).nonOpaque()),
       ItemGroups.VAULT);
 
   public static final Block LOCK_BLOCK = registerBlock("lock",

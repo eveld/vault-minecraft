@@ -1,5 +1,7 @@
 package com.hashicorp.vault.block;
 
+import java.util.Base64;
+
 import com.github.hashicraft.stateful.blocks.StatefulBlock;
 import com.hashicorp.vault.block.entity.LockEntity;
 import com.hashicorp.vault.item.ModItems;
@@ -90,6 +92,8 @@ public class LockBlock extends StatefulBlock {
         NbtCompound identity = stack.getOrCreateNbt();
         String token = identity.getString("token");
         String policy = identity.getString("policy");
+        String encrypted = identity.getString("encrypted");
+        String signature = identity.getString("signature");
 
         if (token == null) {
           player.sendMessage(Text.literal("ACCESS DENIED - You need to be authenticated"), true);
@@ -101,16 +105,40 @@ public class LockBlock extends StatefulBlock {
           return ActionResult.SUCCESS;
         }
 
-        boolean access = lock.checkAccess(token, lock.getPolicy());
-        if (access) {
-          BlockState newState = state.with(POWERED, true);
-          world.setBlockState(pos, newState, Block.NOTIFY_ALL);
-          world.createAndScheduleBlockTick(new BlockPos(pos), this, 40);
+        if (encrypted == null) {
+          player.sendMessage(Text.literal("ACCESS DENIED - No encrypted data found"), true);
           return ActionResult.SUCCESS;
-        } else {
+        }
+
+        if (signature == null) {
+          player.sendMessage(Text.literal("ACCESS DENIED - No signature found"), true);
+          return ActionResult.SUCCESS;
+        }
+
+        boolean verify = lock.verify(encrypted, signature);
+        if (!verify) {
+          player.sendMessage(Text.literal("ACCESS DENIED - Unable to verify encrypted data"), true);
+          return ActionResult.SUCCESS;
+        }
+
+        String decrypted = lock.decrypt(encrypted);
+        String uuid = new String(Base64.getDecoder().decode(decrypted));
+
+        if (!uuid.equalsIgnoreCase(player.getUuidAsString())) {
+          player.sendMessage(Text.literal("ACCESS DENIED - You are not the owner of this card"), true);
+          return ActionResult.SUCCESS;
+        }
+
+        boolean access = lock.checkAccess(token, lock.getPolicy());
+        if (!access) {
           player.sendMessage(Text.literal("ACCESS DENIED - You do not have the required policies"), true);
           return ActionResult.SUCCESS;
         }
+
+        BlockState newState = state.with(POWERED, true);
+        world.setBlockState(pos, newState, Block.NOTIFY_ALL);
+        world.createAndScheduleBlockTick(new BlockPos(pos), this, 40);
+        return ActionResult.SUCCESS;
       }
     }
 

@@ -25,10 +25,19 @@ public class DispenserRenderer<T extends DispenserEntity> implements BlockEntity
   public void render(DispenserEntity entity, float tickDelta, MatrixStack matrices,
       VertexConsumerProvider vertexConsumers, int light, int overlay) {
     Direction direction = entity.getCachedState().get(Properties.HORIZONTAL_FACING);
+    renderItem(ModItems.CARD_ITEM, 0.0f, direction, matrices, vertexConsumers, light, overlay);
+
+    renderItem(ModItems.CARD_ITEM, 0.15f, direction, matrices, vertexConsumers, light, overlay);
+
+    renderItem(ModItems.CARD_ITEM, 0.3f, direction, matrices, vertexConsumers, light, overlay);
+  }
+
+  public void renderItem(Item item, float offset, Direction direction, MatrixStack matrices,
+      VertexConsumerProvider vertexConsumers, int light, int overlay) {
     matrices.push();
 
     float xTranslate = 0.0F;
-    float yTranslate = 0.7F;
+    float yTranslate = 0.25F;
     float zTranslate = 0.0F;
 
     float scale = 0.4f;
@@ -41,21 +50,21 @@ public class DispenserRenderer<T extends DispenserEntity> implements BlockEntity
         break;
       case NORTH:
         xTranslate = 0.5F;
-        zTranslate = 0.4F;
+        zTranslate = 0.45F + offset;
         rotation = 180.0F;
         break;
       case SOUTH:
         xTranslate = 0.5F;
-        zTranslate = 0.6F;
+        zTranslate = 0.55F - offset;
         rotation = 0.0F;
         break;
       case EAST:
-        xTranslate = 0.6F;
+        xTranslate = 0.55F - offset;
         zTranslate = 0.5F;
         rotation = 90.0F;
         break;
       case WEST:
-        xTranslate = 0.4F;
+        xTranslate = 0.45F + offset;
         zTranslate = 0.5F;
         rotation = 270.0F;
         break;
@@ -66,14 +75,10 @@ public class DispenserRenderer<T extends DispenserEntity> implements BlockEntity
 
     matrices.scale(scale, scale, scale);
 
-    MinecraftClient.getInstance().getItemRenderer().renderItem(new ItemStack(ModItems.CARD_ITEM, 1),
+    MinecraftClient.getInstance().getItemRenderer().renderItem(new ItemStack(item, 1),
         ModelTransformation.Mode.GUI,
         light, overlay, matrices, vertexConsumers, 0);
 
     matrices.pop();
-  }
-
-  public void renderItem(Item item, float offset) {
-
   }
 }

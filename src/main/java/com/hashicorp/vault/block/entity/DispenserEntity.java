@@ -5,13 +5,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Base64;
 
 import com.github.hashicraft.stateful.blocks.StatefulBlockEntity;
 import com.github.hashicraft.stateful.blocks.Syncable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.hashicorp.vault.Mod;
+import com.hashicorp.vault.vault.Encrypted;
 import com.hashicorp.vault.vault.Login;
+import com.hashicorp.vault.vault.Signature;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -42,8 +45,8 @@ public class DispenserEntity extends StatefulBlockEntity {
     try {
       String payload = String.format("""
           {
-          "password": "%s",
-          "policies": "%s"
+            "password": "%s",
+            "policies": "%s"
           }
           """, password, policies);
 
@@ -63,7 +66,7 @@ public class DispenserEntity extends StatefulBlockEntity {
 
       return true;
     } catch (Exception e) {
-      Mod.LOGGER.warn(e.getStackTrace().toString());
+      e.printStackTrace();
       return false;
     }
   }
@@ -75,7 +78,7 @@ public class DispenserEntity extends StatefulBlockEntity {
 
       String payload = String.format("""
           {
-          "password": "%s"
+            "password": "%s"
           }
           """, password);
 
@@ -100,7 +103,73 @@ public class DispenserEntity extends StatefulBlockEntity {
       Login login = gson.fromJson(response.body(), Login.class);
       return login;
     } catch (Exception e) {
-      Mod.LOGGER.warn(e.getStackTrace().toString());
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public String encrypt(String input) {
+    try {
+      String payload = String.format("""
+          {
+            "plaintext": "%s"
+          }
+          """, Base64.getEncoder().encodeToString(input.getBytes()));
+
+      HttpClient client = HttpClient.newHttpClient();
+      HttpRequest request = HttpRequest.newBuilder()
+          .uri(URI.create(vaultAddress + "/v1/transit/encrypt/minecraft"))
+          .header("Accept", "application/json")
+          .header("X-Vault-Token", vaultToken)
+          .POST(HttpRequest.BodyPublishers.ofString(payload))
+          .build();
+
+      HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+      if (response.statusCode() >= 400) {
+        Mod.LOGGER.warn(response.body());
+        return null;
+      }
+
+      GsonBuilder builder = new GsonBuilder();
+      Gson gson = builder.create();
+      Encrypted encrypted = gson.fromJson(response.body(), Encrypted.class);
+      return encrypted.data.ciphertext;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public String sign(String input) {
+    try {
+      String payload = String.format("""
+          {
+            "hash_algorithm":"sha2-256",
+            "signature_algorithm":"pkcs1v15",
+            "input":"%s"
+          }
+          """, Base64.getEncoder().encodeToString(input.getBytes()));
+
+      HttpClient client = HttpClient.newHttpClient();
+      HttpRequest request = HttpRequest.newBuilder()
+          .uri(URI.create(vaultAddress + "/v1/transit/sign/minecraft"))
+          .header("Accept", "application/json")
+          .header("X-Vault-Token", vaultToken)
+          .POST(HttpRequest.BodyPublishers.ofString(payload))
+          .build();
+
+      HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+      if (response.statusCode() >= 400) {
+        Mod.LOGGER.warn(response.body());
+        return null;
+      }
+
+      GsonBuilder builder = new GsonBuilder();
+      Gson gson = builder.create();
+      Signature signature = gson.fromJson(response.body(), Signature.class);
+      return signature.data.signature;
+    } catch (Exception e) {
+      e.printStackTrace();
       return null;
     }
   }
@@ -111,9 +180,9 @@ public class DispenserEntity extends StatefulBlockEntity {
     double z = pointer.getZ() + 0.7D * (double) side.getOffsetZ();
 
     if (side.getAxis() == Direction.Axis.Y) {
-      y -= 0.125D;
+      y -= 0.425D;
     } else {
-      y -= 0.15625D;
+      y -= 0.45625D;
     }
 
     ItemEntity entity = new ItemEntity(world, x, y, z, stack);
