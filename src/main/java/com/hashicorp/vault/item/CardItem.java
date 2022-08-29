@@ -54,7 +54,7 @@ public class CardItem extends Item {
 
   @Override
   public Text getName(ItemStack stack) {
-    NbtCompound identity = new ItemStack(this).getOrCreateNbt();
+    NbtCompound identity = stack.getOrCreateNbt();
     String name = identity.getString("name");
 
     MutableText text = Text.translatable(this.getTranslationKey());
