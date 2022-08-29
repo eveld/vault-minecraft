@@ -89,52 +89,59 @@ public class LockBlock extends StatefulBlock {
       }
 
       if (stack.isOf(ModItems.CARD_ITEM)) {
+        // Get the data from the card.
         NbtCompound identity = stack.getOrCreateNbt();
         String token = identity.getString("token");
         String policy = identity.getString("policy");
         String encrypted = identity.getString("encrypted");
         String signature = identity.getString("signature");
 
-        if (token == null) {
+        // Check that we have all the data we need.
+        if (token == "") {
           player.sendMessage(Text.literal("ACCESS DENIED - You need to be authenticated"), true);
           return ActionResult.SUCCESS;
         }
 
-        if (policy == null) {
+        if (policy == "") {
           player.sendMessage(Text.literal("ACCESS DENIED - No policies found"), true);
           return ActionResult.SUCCESS;
         }
 
-        if (encrypted == null) {
+        if (encrypted == "") {
           player.sendMessage(Text.literal("ACCESS DENIED - No encrypted data found"), true);
           return ActionResult.SUCCESS;
         }
 
-        if (signature == null) {
+        if (signature == "") {
           player.sendMessage(Text.literal("ACCESS DENIED - No signature found"), true);
           return ActionResult.SUCCESS;
         }
 
+        // Check that the data has not been tampered with.
         boolean verify = lock.verify(encrypted, signature);
         if (!verify) {
           player.sendMessage(Text.literal("ACCESS DENIED - Unable to verify encrypted data"), true);
           return ActionResult.SUCCESS;
         }
 
+        // Decrypt the data.
         String decrypted = lock.decrypt(encrypted);
         String uuid = new String(Base64.getDecoder().decode(decrypted));
 
+        // Check if the data matches the player.
         if (!uuid.equalsIgnoreCase(player.getUuidAsString())) {
           player.sendMessage(Text.literal("ACCESS DENIED - You are not the owner of this card"), true);
           return ActionResult.SUCCESS;
         }
 
+        // Check if the token on the card has access to the given path.
         boolean access = lock.checkAccess(token, lock.getPolicy());
         if (!access) {
           player.sendMessage(Text.literal("ACCESS DENIED - You do not have the required policies"), true);
           return ActionResult.SUCCESS;
         }
 
+        // Success.
         BlockState newState = state.with(POWERED, true);
         world.setBlockState(pos, newState, Block.NOTIFY_ALL);
         world.createAndScheduleBlockTick(new BlockPos(pos), this, 40);
