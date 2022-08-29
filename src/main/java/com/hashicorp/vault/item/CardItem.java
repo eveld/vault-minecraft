@@ -59,8 +59,8 @@ public class CardItem extends Item {
 
     MutableText text = Text.translatable(this.getTranslationKey());
 
-    if (name != null) {
-      text.append(Text.literal(" - " + name));
+    if (name != "") {
+      text.append(Text.literal(" (" + name + ")").setStyle(Style.EMPTY.withColor(Formatting.GRAY)));
     }
 
     return text;
