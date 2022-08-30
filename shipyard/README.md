@@ -4,17 +4,17 @@
 
 1 Show the minecraft world
 2 Show the item
-  2a `item/CardItem`
+  a `item/CardItem`
 3 Show the blocks
-  3a `block/DispenserBlock`
-  3b `block/entity/DispenserEntity`
-  3c `block/LockBlock`
-  3d `block/entity/LockEntity`
+  a `block/DispenserBlock`
+  b `block/entity/DispenserEntity`
+  c `block/LockBlock`
+  d `block/entity/LockEntity`
 4 Show the environment
-  4a show vault cli
-  4b show vault ui
-  4c show setup script `main.hcl`
-  4d show policies `policies/*.hcl`
+  a show vault cli
+  b show vault ui
+  c show setup script `main.hcl`
+  d show policies `policies/*.hcl`
 
 ## POST request
 
